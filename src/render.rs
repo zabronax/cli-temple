@@ -30,10 +30,13 @@ pub fn render_template(
 
     // Create Handlebars registry and register template
     let mut handlebars = Handlebars::new();
+    handlebars.set_strict_mode(true);
     handlebars.register_template_string("template", &template_content)?;
 
     // Render template with config data
-    let rendered = handlebars.render("template", &config_json)?;
+    let rendered = handlebars.render("template", &config_json).map_err(|e| {
+        format!("template references non-existent configuration value: {}", e)
+    })?;
 
     Ok(rendered)
 }
