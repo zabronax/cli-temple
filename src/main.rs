@@ -60,8 +60,7 @@ fn main() {
 
             let config_ref = sub_matches
                 .get_one::<String>("config_ref")
-                .map(String::as_str)
-                .expect("config_ref is required");
+                .map(String::as_str);
 
             let target = sub_matches.get_one::<String>("target").map(String::as_str);
 
@@ -86,7 +85,7 @@ fn main() {
 fn render(
     _target: Option<&str>,
     template_ref: &str,
-    config_ref: &str,
+    config_ref: Option<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let rendered = render::render_template(template_ref, config_ref)?;
     print!("{}", rendered);

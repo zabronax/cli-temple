@@ -2,19 +2,27 @@ use handlebars::Handlebars;
 use serde_json::Value as JsonValue;
 use std::fs;
 use std::io;
+use std::io::Read;
 
 pub fn render_template(
     template_path: &str,
-    config_path: &str,
+    config_path: Option<&str>,
 ) -> Result<String, Box<dyn std::error::Error>> {
-    // Read config file and parse JSON
-    let config_content = fs::read_to_string(config_path).map_err(|e| {
-        if e.kind() == io::ErrorKind::NotFound {
-            "config file not found".to_string()
-        } else {
-            format!("failed to read config file: {}", e)
+    // Read config from file or stdin
+    let config_content = match config_path {
+        Some(path) => fs::read_to_string(path).map_err(|e| {
+            if e.kind() == io::ErrorKind::NotFound {
+                "config file not found".to_string()
+            } else {
+                format!("failed to read config file: {}", e)
+            }
+        })?,
+        _ => {
+            let mut buffer = String::new();
+            io::stdin().read_to_string(&mut buffer)?;
+            buffer
         }
-    })?;
+    };
 
     let config_json: JsonValue =
         serde_json::from_str(&config_content).map_err(|_| "config is invalid JSON".to_string())?;
@@ -35,7 +43,10 @@ pub fn render_template(
 
     // Render template with config data
     let rendered = handlebars.render("template", &config_json).map_err(|e| {
-        format!("template references non-existent configuration value: {}", e)
+        format!(
+            "template references non-existent configuration value: {}",
+            e
+        )
     })?;
 
     Ok(rendered)
