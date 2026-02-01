@@ -1,6 +1,7 @@
 name: Release
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - 'v*'
@@ -8,13 +9,30 @@ on:
 jobs:
   create-release:
     runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.release-ref.outputs.ref }}
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - uses: taiki-e/create-gh-release-action@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.ref }}
+      - name: Create release
+        id: release-ref
+        run: |
+          REF="${{ github.event_name == 'workflow_dispatch' && github.sha || github.ref }}"
+          TAG_NAME="${REF#refs/tags/}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG_NAME="${TAG_NAME:0:12}"
+            REF="refs/tags/$TAG_NAME"
+          fi
+          gh release create "$TAG_NAME" \
+            --target "${{ github.event_name == 'workflow_dispatch' && github.sha || github.ref }}" \
+            --title "$TAG_NAME" \
+            --notes "Release for $TAG_NAME"
+          echo "ref=$REF" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   upload-assets:
     needs: create-release
@@ -37,8 +55,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.ref }}
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: temple
           target: ${{ matrix.target }}
+          ref: ${{ needs.create-release.outputs.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
