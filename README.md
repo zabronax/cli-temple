@@ -1,81 +1,65 @@
-# Header Template
+# Temple
 
-A small, easy-to-use CLI tool for standardizing the creation of headers for projects.
+A small, easy-to-use CLI tool for structured templating with support for complex configurations like color schemes.
 
 ## Motivation
 
-I seem to scaffold a lot of projects, and want most of them to at least include some basic badges as well as an image with links.
+I scaffold many projects and want most of them to include basic badges and an image with links. This tool helps ensure coherence across those projects.
 
-This handy tool would help with ensuring some form of coherence across those.
+I also realized this is better thought of as a generic templating tool that's more structured than something like `envsubst`. Tools like `envsubst` work well for a small set of variables, but I needed support for structured inputs like color schemes, which requires more sophisticated templating.
 
-## Imagined Interface
+## Interface
 
-**Call Pattern Alternatives:**
 ```sh
-# Option #1
-header-template render --postProcessor githubMarkdown ~/templates/project-header.html ./config.json > README.md
-# Option #2
-cat config.json | header-template render ~/templates/default-header.html > index.html
-cat config.json | header-template render github:zabronax/templates?path=/headers/basic-header.html > index.html
-
-# Reading from Env
-cat config.json | header-template render --templateRefEnv BASIC_HEADER > index.html
-# Standardized Env?
-export HEADER_GEN_TEMPLATE_REF=github:zabronax/templates/project-header.html
-cat config.json | header-template render > index.html
-# Minimal set
-cat config.json | header-template render > README.md
-header-template render < config.json > README.md
-
-# Write a config-template (includes schema). Reserve the options for adding other types later.
-header-template create config > config.json
-header-template create header-ci-badges > header-standard-project.html
-header-template create header-private-project > header-private-project.html
-
-# A better name for the tool
+# Basic usage with explicit arguments
 temple render --target githubMarkdown < config.json > README.md
-cat config.json | temple render > index.html
-# Fitting env name (My current favorite, and what I see as most sensible)
+cat config.json | temple render ~/templates/site.html > index.html
+
+# Using environment variables for template reference
 export TEMPLE_REF=file:/absolute/path/header.html
 cat config.json | temple render --target githubMarkdown > README.md
-# Possibly the config as well, then user can hand edit the result
+
+# Minimal invocation with all config via environment
 export TEMPLE_REF=file:/absolute/path/header.html
 export TEMPLE_REF_CONFIG=file:/absolute/path/config.json
-temple render --target githubMarkdown > README.md
+export TEMPLE_TARGET=githubMarkdown
+temple render > README.md
+
+# Fully explicit invocation
+cat config.json | temple render --target githubMarkdown template.html > README.md
 ```
 
 ```ts
-// The imagined shape of the CLI interface with flags or arguments, expressed as a function
-type cli = (targetFlag: Target?, templateRef: Uri<Template>, configRef: Uri<Config>) => string
-// A generic reference to a resource
-type Uri<T> = (`${protocol: Protocol}:${path}?${options: Options<Protocol>}`) => T
-// Supported lookup protocols
-type Protocol = "file" | "github" | "ipfs"
-// Narrow Records for each protocol (My TS is rusty so this is likely wrong)
-type Options<T extends Protocol> = {
-  "file": null | undefined,
-  "github": `path=${path}` | `ref=${ref}`, // This is definitely wrong
-  "ipfs": null | undefined, // Uncertain what would be meaningful here
-}
+// CLI interface shape
+type cli = (
+  target?: Target,
+  templateRef?: Uri<Template>,
+  configRef?: Uri<Config>
+) => string
+
+// Generic reference to a resource
+type Uri<T> = `${Protocol}:${string}`
+
+// Supported lookup protocols (v1: file only)
+type Protocol = "file" // | "github" | "ipfs" // v2+
+
 // Configuration resource for setting values
 type Config = {
   value: Record<string, string>
   theme: Record<Base16ColorString, HexCode>
 }
-// Fills out a template string with values from the config
-type Template = (config) => string
-// Transforms the template into a subset matching target constraints
-type PostProcessor = Record<PostProcessorType, (string) => string>
-// Supported narrowing processors
-type Target = "markdown" | "githubMarkdown" | "html" 
+
+// Template function that fills values from config
+type Template = (config: Config) => string
+
+// Supported output targets
+type Target = "markdown" | "githubMarkdown" | "html"
 ```
 
-## Realizations
+## Design Decisions
 
-- Defaulting templates to HTML seems prudent due to its semantic richness, and then optionally downgrading to subsets
-- Supporting remote protocols will have to come in version >1. Local is for v1.
-- Providing a utility for scaffolding a config in repo is easier than advanced UI flows, and straightforward to version and automate in CI
+- Defaulting templates to HTML seems prudent due to its semantic richness, then optionally downgrading to subsets
+- Supporting remote protocols (github, ipfs) will come in v2+. Local file references only for v1
+- Template and config references can be provided via arguments or environment variables (`TEMPLE_REF`, `TEMPLE_REF_CONFIG`, `TEMPLE_TARGET`)
 - Insertion into the middle of documents will have to be handled by other tools
-- TemplateRef should likely also be settable through an Env variable to ease standardization. Perhaps something like `--templateRefEnv HEADER_GEN_TEMPLATE_REF`
-- Template scaffolding explosion is a thing. Likely better to allow the user to supply their own template directory which can be sourced from. With just a tiny handful hardcoded in the tool (default, private, organization). This is v2+ material
-- This is also not really a header generator though, that is my primary goal. It's more like a JSX function call in a CLI than anything else.
+- This is more like a JSX function call in a CLI than a traditional header generator
