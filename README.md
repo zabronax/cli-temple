@@ -8,6 +8,14 @@ I scaffold many projects and want most of them to include basic badges and an im
 
 I also realized this is better thought of as a generic templating tool that's more structured than something like `envsubst`. Tools like `envsubst` work well for a small set of variables, but I needed support for structured inputs like color schemes, which requires more sophisticated templating.
 
+## Constraint
+
+### Static binary
+
+To avoid unnecessary headaches in usage and reduce the size of the resulting tool (it should be tiny), I am settling on Rust as the implementation language. This is primarily due to its capability for statically compiling against many platforms.
+
+Go was also considered, but its type system was deemed subpar to Rust. My mind was thinking in ADTs when sketching this out.
+
 ## Interface
 
 ```sh
