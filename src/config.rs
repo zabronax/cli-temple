@@ -1,6 +1,9 @@
 pub const DEFAULT_CONFIG_TEMPLATE: &str = r##"{
   "values": {
     "projectName": "temple",
+    "projectUrl": "https://github.com/zabronax/cli-temple",
+    "logoUrl": "https://raw.githubusercontent.com/zabronax/cli-temple/main/docs/placeholder-logo.svg",
+    "licenseUrl": "https://github.com/zabronax/cli-temple/blob/main/LICENSE",
     "gitSource": {
       "provider": "github",
       "user": "zabronax",
