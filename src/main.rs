@@ -1,6 +1,7 @@
 use clap::{Arg, Command};
+use std::process;
 
-use temple::{config, template};
+use temple::{config, render, template};
 
 fn cli() -> Command {
     Command::new("temple")
@@ -52,11 +53,6 @@ fn main() {
 
     match matches.subcommand() {
         Some(("render", sub_matches)) => {
-            let target = sub_matches
-                .get_one::<String>("target")
-                .map(String::as_str)
-                .expect("target is required");
-
             let template_ref = sub_matches
                 .get_one::<String>("template_ref")
                 .map(String::as_str)
@@ -67,7 +63,12 @@ fn main() {
                 .map(String::as_str)
                 .expect("config_ref is required");
 
-            render(target, template_ref, config_ref);
+            let target = sub_matches.get_one::<String>("target").map(String::as_str);
+
+            if let Err(e) = render(target, template_ref, config_ref) {
+                eprintln!("Error rendering template: {}", e);
+                process::exit(1);
+            }
         }
         Some(("create", sub_matches)) => match sub_matches.subcommand() {
             Some(("config", _)) => {
@@ -82,10 +83,14 @@ fn main() {
     }
 }
 
-fn render(target: &str, template_ref: &str, config_ref: &str) {
-    println!("Target: {}", target);
-    println!("Template reference: {}", template_ref);
-    println!("Config reference: {}", config_ref);
+fn render(
+    _target: Option<&str>,
+    template_ref: &str,
+    config_ref: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let rendered = render::render_template(template_ref, config_ref)?;
+    print!("{}", rendered);
+    Ok(())
 }
 
 fn create_config() {
