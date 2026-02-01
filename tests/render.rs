@@ -61,6 +61,34 @@ fn render_with_template_and_config_renders_correctly() {
         .stdout(predicates::str::contains("cli-temple")); // gitSource.repo
 }
 
+#[test]
+fn render_with_piped_config_renders_correctly() {
+    // Create temporary directory for test files
+    let temp_dir = TempDir::new().unwrap();
+    let template_path = temp_dir.path().join("template.tmpl");
+
+    // Write template to file
+    let mut template_file = fs::File::create(&template_path).unwrap();
+    template_file
+        .write_all(DEFAULT_TEMPLE_TEMPLATE.as_bytes())
+        .unwrap();
+    template_file.sync_all().unwrap();
+
+    // Invoke render command with config piped via stdin
+    let mut cmd = cargo_bin_cmd!("temple");
+    cmd.arg("render")
+        .arg("--template-ref")
+        .arg(template_path.to_str().unwrap())
+        .write_stdin(DEFAULT_CONFIG_TEMPLATE);
+
+    // Assert stdout contains rendered values from piped config
+    cmd.assert()
+        .success()
+        .stdout(predicates::str::contains("temple")) // projectName
+        .stdout(predicates::str::contains("zabronax")) // gitSource.user
+        .stdout(predicates::str::contains("cli-temple")); // gitSource.repo
+}
+
 struct ErrorTestCase {
     reference_error: &'static str,
     error_message: &'static str,
