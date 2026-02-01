@@ -61,85 +61,80 @@ fn render_with_template_and_config_renders_correctly() {
         .stdout(predicates::str::contains("cli-temple")); // gitSource.repo
 }
 
-#[test]
-fn render_with_nonexistent_template_fails() {
-    let temp_dir = TempDir::new().unwrap();
-    let template_path = temp_dir.path().join("nonexistent.tmpl");
-    let config_path = temp_dir.path().join("config.json");
-
-    // Write config to file
-    let mut config_file = fs::File::create(&config_path).unwrap();
-    config_file
-        .write_all(DEFAULT_CONFIG_TEMPLATE.as_bytes())
-        .unwrap();
-    config_file.sync_all().unwrap();
-
-    // Invoke render command with nonexistent template
-    let mut cmd = cargo_bin_cmd!("temple");
-    cmd.arg("render")
-        .arg("--template-ref")
-        .arg(template_path.to_str().unwrap())
-        .arg("--config-ref")
-        .arg(config_path.to_str().unwrap());
-
-    cmd.assert()
-        .failure()
-        .stderr(predicates::str::contains("Error"));
+struct ErrorTestCase {
+    reference_error: &'static str,
+    error_message: &'static str,
+    setup_template: fn(&std::path::Path) -> std::path::PathBuf,
+    setup_config: fn(&std::path::Path) -> std::path::PathBuf,
 }
 
 #[test]
-fn render_with_nonexistent_config_fails() {
-    let temp_dir = TempDir::new().unwrap();
-    let template_path = temp_dir.path().join("template.tmpl");
-    let config_path = temp_dir.path().join("nonexistent.json");
+fn render_with_invalid_references_fails() {
+    let test_cases = vec![
+        ErrorTestCase {
+            reference_error: "NonexistentTemplate",
+            error_message: "Error",
+            setup_template: |temp_dir| temp_dir.join("nonexistent.tmpl"),
+            setup_config: |temp_dir| {
+                let config_path = temp_dir.join("config.json");
+                let mut config_file = fs::File::create(&config_path).unwrap();
+                config_file
+                    .write_all(DEFAULT_CONFIG_TEMPLATE.as_bytes())
+                    .unwrap();
+                config_file.sync_all().unwrap();
+                config_path
+            },
+        },
+        ErrorTestCase {
+            reference_error: "NonexistentConfig",
+            error_message: "Error",
+            setup_template: |temp_dir| {
+                let template_path = temp_dir.join("template.tmpl");
+                let mut template_file = fs::File::create(&template_path).unwrap();
+                template_file
+                    .write_all(DEFAULT_TEMPLE_TEMPLATE.as_bytes())
+                    .unwrap();
+                template_file.sync_all().unwrap();
+                template_path
+            },
+            setup_config: |temp_dir| temp_dir.join("nonexistent.json"),
+        },
+        ErrorTestCase {
+            reference_error: "InvalidJsonConfig",
+            error_message: "Error",
+            setup_template: |temp_dir| {
+                let template_path = temp_dir.join("template.tmpl");
+                let mut template_file = fs::File::create(&template_path).unwrap();
+                template_file
+                    .write_all(DEFAULT_TEMPLE_TEMPLATE.as_bytes())
+                    .unwrap();
+                template_file.sync_all().unwrap();
+                template_path
+            },
+            setup_config: |temp_dir| {
+                let config_path = temp_dir.join("config.json");
+                let mut config_file = fs::File::create(&config_path).unwrap();
+                config_file.write_all(b"{ invalid json }").unwrap();
+                config_file.sync_all().unwrap();
+                config_path
+            },
+        },
+    ];
 
-    // Write template to file
-    let mut template_file = fs::File::create(&template_path).unwrap();
-    template_file
-        .write_all(DEFAULT_TEMPLE_TEMPLATE.as_bytes())
-        .unwrap();
-    template_file.sync_all().unwrap();
+    for test_case in test_cases {
+        let temp_dir = TempDir::new().unwrap();
+        let template_path = (test_case.setup_template)(temp_dir.path());
+        let config_path = (test_case.setup_config)(temp_dir.path());
 
-    // Invoke render command with nonexistent config
-    let mut cmd = cargo_bin_cmd!("temple");
-    cmd.arg("render")
-        .arg("--template-ref")
-        .arg(template_path.to_str().unwrap())
-        .arg("--config-ref")
-        .arg(config_path.to_str().unwrap());
+        let mut cmd = cargo_bin_cmd!("temple");
+        cmd.arg("render")
+            .arg("--template-ref")
+            .arg(template_path.to_str().unwrap())
+            .arg("--config-ref")
+            .arg(config_path.to_str().unwrap());
 
-    cmd.assert()
-        .failure()
-        .stderr(predicates::str::contains("Error"));
-}
-
-#[test]
-fn render_with_invalid_json_config_fails() {
-    let temp_dir = TempDir::new().unwrap();
-    let template_path = temp_dir.path().join("template.tmpl");
-    let config_path = temp_dir.path().join("config.json");
-
-    // Write template to file
-    let mut template_file = fs::File::create(&template_path).unwrap();
-    template_file
-        .write_all(DEFAULT_TEMPLE_TEMPLATE.as_bytes())
-        .unwrap();
-    template_file.sync_all().unwrap();
-
-    // Write invalid JSON to config file
-    let mut config_file = fs::File::create(&config_path).unwrap();
-    config_file.write_all(b"{ invalid json }").unwrap();
-    config_file.sync_all().unwrap();
-
-    // Invoke render command with invalid JSON
-    let mut cmd = cargo_bin_cmd!("temple");
-    cmd.arg("render")
-        .arg("--template-ref")
-        .arg(template_path.to_str().unwrap())
-        .arg("--config-ref")
-        .arg(config_path.to_str().unwrap());
-
-    cmd.assert()
-        .failure()
-        .stderr(predicates::str::contains("Error"));
+        cmd.assert()
+            .failure()
+            .stderr(predicates::str::contains(test_case.error_message));
+    }
 }
