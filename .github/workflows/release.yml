@@ -47,10 +47,6 @@ jobs:
             binary_name: temple-linux-x86_64
           - target: aarch64-unknown-linux-gnu
             binary_name: temple-linux-aarch64
-          - target: x86_64-apple-darwin
-            binary_name: temple-darwin-x86_64
-          - target: aarch64-apple-darwin
-            binary_name: temple-darwin-aarch64
           - target: x86_64-pc-windows-msvc
             binary_name: temple-windows-x86_64.exe
     steps:
@@ -70,11 +66,15 @@ jobs:
         run: |
           cross build --release --target ${{ matrix.target }}
 
-      - name: Upload binary to release
+      - name: Upload binary
         shell: 'nix develop -c bash -e {0}'
         run: |
-          gh release upload ${{ needs.create-release.outputs.tag }} \
-            "target/${{ matrix.target }}/release/${{ matrix.binary_name }}" \
-            --clobber
+          if [[ "${{ matrix.target }}" =~ windows ]]; then
+            BINARY="target/${{ matrix.target }}/release/temple.exe"
+          else
+            BINARY="target/${{ matrix.target }}/release/temple"
+          fi
+          cp "$BINARY" "${{ matrix.binary_name }}"
+          gh release upload ${{ needs.create-release.outputs.tag }} "${{ matrix.binary_name }}" --clobber
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
