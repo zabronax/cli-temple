@@ -44,20 +44,15 @@ jobs:
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
-            binary_name: temple
-            asset_name: temple-x86_64-unknown-linux-gnu
+            binary_name: temple-linux-x86_64
           - target: aarch64-unknown-linux-gnu
-            binary_name: temple
-            asset_name: temple-aarch64-unknown-linux-gnu
+            binary_name: temple-linux-aarch64
           - target: x86_64-apple-darwin
-            binary_name: temple
-            asset_name: temple-x86_64-apple-darwin
+            binary_name: temple-darwin-x86_64
           - target: aarch64-apple-darwin
-            binary_name: temple
-            asset_name: temple-aarch64-apple-darwin
+            binary_name: temple-darwin-aarch64
           - target: x86_64-pc-windows-msvc
-            binary_name: temple.exe
-            asset_name: temple-x86_64-pc-windows-msvc.exe
+            binary_name: temple-windows-x86_64.exe
     steps:
       - uses: actions/checkout@v4
         with:
