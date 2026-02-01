@@ -73,7 +73,7 @@ jobs:
       - name: Build binary
         shell: 'nix develop -c bash -e {0}'
         run: |
-          cargo build --release --target ${{ matrix.target }}
+          cross build --release --target ${{ matrix.target }}
 
       - name: Upload binary to release
         shell: 'nix develop -c bash -e {0}'

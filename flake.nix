@@ -56,6 +56,7 @@
             rustfmt # Code formatter (needed for `cargo fmt`)
             rust-analyzer # LSP server for IDE support
             clippy # Linter for catching common mistakes
+            cargo-cross # Cross-compilation tool
             opentofu # OpenTofu package managers
           ];
         };
