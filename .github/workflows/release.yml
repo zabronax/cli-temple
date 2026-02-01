@@ -10,7 +10,7 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
     outputs:
-      ref: ${{ steps.release-ref.outputs.ref }}
+      tag: ${{ steps.release-ref.outputs.tag }}
     permissions:
       contents: write
     steps:
@@ -30,36 +30,56 @@ jobs:
             --target "${{ github.event_name == 'workflow_dispatch' && github.sha || github.ref }}" \
             --title "$TAG_NAME" \
             --notes "Release for $TAG_NAME"
-          echo "ref=$REF" >> $GITHUB_OUTPUT
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  upload-assets:
+  build-and-upload:
     needs: create-release
     permissions:
       contents: write
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
+            binary_name: temple
+            asset_name: temple-x86_64-unknown-linux-gnu
           - target: aarch64-unknown-linux-gnu
-            os: ubuntu-latest
+            binary_name: temple
+            asset_name: temple-aarch64-unknown-linux-gnu
           - target: x86_64-apple-darwin
-            os: macos-latest
+            binary_name: temple
+            asset_name: temple-x86_64-apple-darwin
           - target: aarch64-apple-darwin
-            os: macos-latest
+            binary_name: temple
+            asset_name: temple-aarch64-apple-darwin
           - target: x86_64-pc-windows-msvc
-            os: windows-latest
-    runs-on: ${{ matrix.os }}
+            binary_name: temple.exe
+            asset_name: temple-x86_64-pc-windows-msvc.exe
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.ref }}
-      - uses: taiki-e/upload-rust-binary-action@v1
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
         with:
-          bin: temple
-          target: ${{ matrix.target }}
-          ref: ${{ needs.create-release.outputs.ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pre-build devShell
+        run: nix build --no-link .#devShells.$(nix eval --impure --raw --expr 'builtins.currentSystem').default
+
+      - name: Build binary
+        shell: 'nix develop -c bash -e {0}'
+        run: |
+          cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload binary to release
+        shell: 'nix develop -c bash -e {0}'
+        run: |
+          gh release upload ${{ needs.create-release.outputs.tag }} \
+            "target/${{ matrix.target }}/release/${{ matrix.binary_name }}" \
+            --clobber
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
