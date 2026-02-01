@@ -1,6 +1,6 @@
 resource "github_repository" "primary_repository" {
   name       = "cli-temple"
-  visibility = "private"
+  visibility = "public"
 
   # Metadata
   description = "Structured templating CLI tool"
