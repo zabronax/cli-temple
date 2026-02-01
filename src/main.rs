@@ -1,5 +1,7 @@
 use clap::{Arg, Command};
 
+use temple::config;
+
 fn cli() -> Command {
     Command::new("temple")
         .version("0.1.0")
@@ -87,7 +89,7 @@ fn render(target: &str, template_ref: &str, config_ref: &str) {
 }
 
 fn create_config() {
-    println!("Creating config");
+    print!("{}", config::DEFAULT_CONFIG_TEMPLATE);
 }
 
 fn create_template() {
