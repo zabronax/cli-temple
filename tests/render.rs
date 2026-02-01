@@ -133,8 +133,17 @@ fn render_with_invalid_references_fails() {
             .arg("--config-ref")
             .arg(config_path.to_str().unwrap());
 
-        cmd.assert()
-            .failure()
-            .stderr(predicates::str::contains(test_case.error_message));
+        let assert = cmd.assert().failure();
+        let output = assert.get_output();
+        
+        // Include reference_error in test output for debugging
+        eprintln!(
+            "Test case '{}' - Expected: '{}', Got: {}",
+            test_case.reference_error,
+            test_case.error_message,
+            String::from_utf8_lossy(&output.stderr)
+        );
+        
+        assert.stderr(predicates::str::contains(test_case.error_message));
     }
 }
