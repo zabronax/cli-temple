@@ -1,6 +1,7 @@
 name: Release
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - 'v*'
@@ -8,13 +9,33 @@ on:
 jobs:
   create-release:
     runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.release-ref.outputs.ref }}
     permissions:
       contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.ref }}
+      - name: Create tag for manual release
+        if: github.event_name == 'workflow_dispatch'
+        id: tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          TAG="manual-${{ github.sha }}"
+          git tag -a "$TAG" -m "Manual release for ${{ github.sha }}"
+          git push origin "$TAG"
+          echo "ref=refs/tags/$TAG" >> $GITHUB_OUTPUT
       - uses: taiki-e/create-gh-release-action@v1
+        id: release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ steps.tag.outputs.ref || github.ref }}
+      - name: Set release ref
+        id: release-ref
+        run: echo "ref=${{ steps.tag.outputs.ref || github.ref }}" >> $GITHUB_OUTPUT
 
   upload-assets:
     needs: create-release
@@ -37,8 +58,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.ref }}
       - uses: taiki-e/upload-rust-binary-action@v1
         with:
           bin: temple
           target: ${{ matrix.target }}
+          ref: ${{ needs.create-release.outputs.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
