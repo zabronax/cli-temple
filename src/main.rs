@@ -1,6 +1,6 @@
 use clap::{Arg, Command};
 
-use temple::config;
+use temple::{config, template};
 
 fn cli() -> Command {
     Command::new("temple")
@@ -93,5 +93,5 @@ fn create_config() {
 }
 
 fn create_template() {
-    println!("Creating template");
+    print!("{}", template::DEFAULT_TEMPLE_TEMPLATE);
 }
