@@ -17,3 +17,12 @@ fn create_config_shows_help() {
         .success()
         .stdout(predicates::str::contains("Creating config"));
 }
+
+#[test]
+fn create_template_shows_help() {
+    let mut cmd = cargo_bin_cmd!("temple");
+    cmd.arg("create").arg("template");
+    cmd.assert()
+        .success()
+        .stdout(predicates::str::contains("Creating template"));
+}
