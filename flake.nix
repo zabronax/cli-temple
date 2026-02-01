@@ -8,6 +8,9 @@
   outputs =
     { self, nixpkgs }:
     let
+      cargoToml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
+      package = cargoToml.package;
+
       supportedSystems = [
         "x86_64-linux"
         "aarch64-darwin"
@@ -22,6 +25,28 @@
       withPkgs = callback: withSystem (system: callback (import nixpkgs { inherit system; }));
     in
     {
+      packages = withPkgs (pkgs: rec {
+        default = temple;
+
+        temple = pkgs.rustPlatform.buildRustPackage {
+          pname = package.name;
+          version = package.version;
+          src = ./.;
+
+          cargoLock = {
+            lockFile = ./Cargo.lock;
+          };
+
+          meta = with pkgs.lib; {
+            description = package.description;
+            homepage = package.homepage;
+            license = licenses.mit;
+            maintainers = [ ];
+            mainProgram = package.name;
+          };
+        };
+      });
+
       devShells = withPkgs (pkgs: rec {
         default = development;
 

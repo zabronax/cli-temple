@@ -2,6 +2,8 @@
 name = "temple"
 version = "0.1.0"
 edition = "2024"
+description = "A small, easy-to-use CLI tool for structured templating with support for complex configurations like color schemes"
+homepage = "https://github.com/zabronax/cli-temple"
 
 [dependencies]
 clap = { version = "4.5.56", features = ["derive"] }
