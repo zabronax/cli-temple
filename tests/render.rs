@@ -60,3 +60,86 @@ fn render_with_template_and_config_renders_correctly() {
         .stdout(predicates::str::contains("zabronax")) // gitSource.user
         .stdout(predicates::str::contains("cli-temple")); // gitSource.repo
 }
+
+#[test]
+fn render_with_nonexistent_template_fails() {
+    let temp_dir = TempDir::new().unwrap();
+    let template_path = temp_dir.path().join("nonexistent.tmpl");
+    let config_path = temp_dir.path().join("config.json");
+
+    // Write config to file
+    let mut config_file = fs::File::create(&config_path).unwrap();
+    config_file
+        .write_all(DEFAULT_CONFIG_TEMPLATE.as_bytes())
+        .unwrap();
+    config_file.sync_all().unwrap();
+
+    // Invoke render command with nonexistent template
+    let mut cmd = cargo_bin_cmd!("temple");
+    cmd.arg("render")
+        .arg("--template-ref")
+        .arg(template_path.to_str().unwrap())
+        .arg("--config-ref")
+        .arg(config_path.to_str().unwrap());
+
+    cmd.assert()
+        .failure()
+        .stderr(predicates::str::contains("Error"));
+}
+
+#[test]
+fn render_with_nonexistent_config_fails() {
+    let temp_dir = TempDir::new().unwrap();
+    let template_path = temp_dir.path().join("template.tmpl");
+    let config_path = temp_dir.path().join("nonexistent.json");
+
+    // Write template to file
+    let mut template_file = fs::File::create(&template_path).unwrap();
+    template_file
+        .write_all(DEFAULT_TEMPLE_TEMPLATE.as_bytes())
+        .unwrap();
+    template_file.sync_all().unwrap();
+
+    // Invoke render command with nonexistent config
+    let mut cmd = cargo_bin_cmd!("temple");
+    cmd.arg("render")
+        .arg("--template-ref")
+        .arg(template_path.to_str().unwrap())
+        .arg("--config-ref")
+        .arg(config_path.to_str().unwrap());
+
+    cmd.assert()
+        .failure()
+        .stderr(predicates::str::contains("Error"));
+}
+
+#[test]
+fn render_with_invalid_json_config_fails() {
+    let temp_dir = TempDir::new().unwrap();
+    let template_path = temp_dir.path().join("template.tmpl");
+    let config_path = temp_dir.path().join("config.json");
+
+    // Write template to file
+    let mut template_file = fs::File::create(&template_path).unwrap();
+    template_file
+        .write_all(DEFAULT_TEMPLE_TEMPLATE.as_bytes())
+        .unwrap();
+    template_file.sync_all().unwrap();
+
+    // Write invalid JSON to config file
+    let mut config_file = fs::File::create(&config_path).unwrap();
+    config_file.write_all(b"{ invalid json }").unwrap();
+    config_file.sync_all().unwrap();
+
+    // Invoke render command with invalid JSON
+    let mut cmd = cargo_bin_cmd!("temple");
+    cmd.arg("render")
+        .arg("--template-ref")
+        .arg(template_path.to_str().unwrap())
+        .arg("--config-ref")
+        .arg(config_path.to_str().unwrap());
+
+    cmd.assert()
+        .failure()
+        .stderr(predicates::str::contains("Error"));
+}
