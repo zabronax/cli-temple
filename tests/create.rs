@@ -1,7 +1,7 @@
 use assert_cmd::cargo::cargo_bin_cmd;
 
 #[test]
-fn given_create_command_when_invoking_without_subcommand_then_help_is_displayed() {
+fn create_without_subcommand_shows_help() {
     let mut cmd = cargo_bin_cmd!("temple");
     cmd.arg("create");
     cmd.assert()
@@ -10,7 +10,7 @@ fn given_create_command_when_invoking_without_subcommand_then_help_is_displayed(
 }
 
 #[test]
-fn given_create_config_command_when_invoking_then_config_is_created() {
+fn create_config_shows_help() {
     let mut cmd = cargo_bin_cmd!("temple");
     cmd.arg("create").arg("config");
     cmd.assert()
