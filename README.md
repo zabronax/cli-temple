@@ -1,4 +1,16 @@
-# Temple
+<h1 align="center">
+  <img height="160" src="https://raw.githubusercontent.com/zabronax/cli-temple/main/docs/logo.svg" />
+  <p>cli temple</p>
+</h1>
+
+<p align="center">
+  <a href="https://github.com/zabronax/cli-temple"><img
+      src="https://img.shields.io/github/stars/zabronax/cli-temple?colorA=1C2023&colorB=AEC795&style=for-the-badge"></a>
+  <a href="https://github.com/zabronax/cli-temple/commits"><img
+      src="https://img.shields.io/github/last-commit/zabronax/cli-temple?colorA=1C2023&colorB=95C7AE&style=for-the-badge"></a>
+  <a href="https://github.com/zabronax/cli-temple/blob/main/LICENSE"><img
+      src="https://img.shields.io/github/license/zabronax/cli-temple?colorA=1C2023&colorB=95AEC7&style=for-the-badge"></a>
+</p>
 
 A small, easy-to-use CLI tool for structured templating with support for complex configurations like color schemes.
 
