@@ -135,7 +135,7 @@ fn render_with_invalid_references_fails() {
 
         let assert = cmd.assert().failure();
         let output = assert.get_output();
-        
+
         // Include reference_error in test output for debugging
         eprintln!(
             "Test case '{}' - Expected: '{}', Got: {}",
@@ -143,7 +143,33 @@ fn render_with_invalid_references_fails() {
             test_case.error_message,
             String::from_utf8_lossy(&output.stderr)
         );
-        
+
         assert.stderr(predicates::str::contains(test_case.error_message));
     }
+}
+
+#[test]
+fn render_with_missing_template_value_fails() {
+    let temp_dir = TempDir::new().unwrap();
+    let template_path = temp_dir.path().join("template.tmpl");
+    let config_path = temp_dir.path().join("config.json");
+
+    // Write template that references a missing value
+    fs::write(&template_path, "{{values.missingValue}}").unwrap();
+
+    // Write minimal config without the referenced value
+    fs::write(&config_path, r#"{"values": {}}"#).unwrap();
+
+    // Invoke render command
+    let mut cmd = cargo_bin_cmd!("temple");
+    cmd.arg("render")
+        .arg("--template-ref")
+        .arg(template_path.to_str().unwrap())
+        .arg("--config-ref")
+        .arg(config_path.to_str().unwrap());
+
+    // Assert it fails with a templating error message
+    cmd.assert().failure().stderr(predicates::str::contains(
+        "template references non-existent configuration value",
+    ));
 }
