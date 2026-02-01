@@ -27,10 +27,11 @@
 
         development = pkgs.mkShell {
           packages = with pkgs; [
-            cargo      # Build tool and package manager
-            rustfmt    # Code formatter (needed for `cargo fmt`)
-            rust-analyzer  # LSP server for IDE support
-            clippy      # Linter for catching common mistakes
+            cargo # Build tool and package manager
+            rustfmt # Code formatter (needed for `cargo fmt`)
+            rust-analyzer # LSP server for IDE support
+            clippy # Linter for catching common mistakes
+            opentofu # OpenTofu package managers
           ];
         };
       });

@@ -1,1 +1,7 @@
+# Build artifacts
 /target
+
+# IaC files
+.terraform
+*.tfvars
+*.tfstate*
