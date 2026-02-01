@@ -2,10 +2,95 @@
 
 A small, easy-to-use CLI tool for structured templating with support for complex configurations like color schemes.
 
-## Motivation
+## Installation
 
-I scaffold many projects and want most of them to include basic badges and an image with links. This tool helps ensure coherence across those projects.
+Download the latest release for your platform:
 
-I also realized this is better thought of as a generic templating tool that's more structured than something like `envsubst`. Tools like `envsubst` work well for a small set of variables, but I needed support for structured inputs like color schemes, which requires more sophisticated templating.
+```sh
+curl -L https://github.com/zabronax/cli-temple/releases/latest/download/temple-$platform -o temple
+chmod +x temple
+```
+
+## Quick Start
+
+```sh
+# Create a config and template file
+temple create config > config.json
+temple create template > template.html
+
+# Customize config.json and template.html with your values
+
+# Render output
+cat config.json | temple render --template-ref template.html > output.html
+```
+
+## Examples
+
+### README Header with Badges
+
+Generate a consistent project header with logo, badges, and theme colors:
+
+**config.json:**
+```json
+{
+  "values": {
+    "projectDisplayName": "cli temple",
+    "projectUrl": "https://github.com/user/my-project",
+    "logoUrl": "https://example.com/logo.svg",
+    "licenseUrl": "https://github.com/user/my-project/blob/main/LICENSE",
+    "gitSource": {
+      "provider": "github",
+      "user": "user",
+      "repo": "my-project"
+    }
+  },
+  "theme": {
+    "base00": "1C2023",
+    "base0A": "AEC795",
+    "base0B": "95C7AE",
+    "base0C": "95AEC7"
+  }
+}
+```
+
+**template.html:**
+```html
+<h1 align="center">
+  <img height="160" src="{{values.logoUrl}}" />
+  <p>{{values.projectDisplayName}}</p>
+</h1>
+
+<p align="center">
+  <a href="{{values.projectUrl}}">
+    <img
+      src="https://img.shields.io/github/stars/{{values.gitSource.user}}/{{values.gitSource.repo}}?colorA={{theme.base00}}&colorB={{theme.base0A}}&style=for-the-badge">
+  </a>
+  <a href="{{values.projectUrl}}/commits">
+    <img
+      src="https://img.shields.io/github/last-commit/{{values.gitSource.user}}/{{values.gitSource.repo}}?colorA={{theme.base00}}&colorB={{theme.base0B}}&style=for-the-badge">
+  </a>
+  <a href="{{values.projectUrl}}/blob/main/LICENSE">
+    <img
+      src="https://img.shields.io/github/license/{{values.gitSource.user}}/{{values.gitSource.repo}}?colorA={{theme.base00}}&colorB={{theme.base0C}}&style=for-the-badge">
+  </a>
+</p>
+```
+
+**Render for GitHub Markdown:**
+```sh
+cat config.json | temple render --template-ref index.html > README.md
+```
+
+This generates a centered header with your project logo, name, and badges for stars, last commit, and license, styled with your theme colors.
+
+## Use Cases
+
+### Templating Project Headers
+
+Create consistent headers across multiple projects with shared templates. Define your project metadata once and generate headers that maintain visual and structural coherence.
+
+### Templating READMEs
+
+Generate README files from templates and configuration. Keep your project documentation consistent while customizing content per project through structured configuration.
 
 See [docs/design-musings.md](docs/design-musings.md) for interface design, implementation constraints, and design decisions.
