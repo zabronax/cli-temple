@@ -73,7 +73,7 @@ fn render_with_invalid_references_fails() {
     let test_cases = vec![
         ErrorTestCase {
             reference_error: "NonexistentTemplate",
-            error_message: "Error",
+            error_message: "template file not found",
             setup_template: |temp_dir| temp_dir.join("nonexistent.tmpl"),
             setup_config: |temp_dir| {
                 let config_path = temp_dir.join("config.json");
@@ -87,7 +87,7 @@ fn render_with_invalid_references_fails() {
         },
         ErrorTestCase {
             reference_error: "NonexistentConfig",
-            error_message: "Error",
+            error_message: "config file not found",
             setup_template: |temp_dir| {
                 let template_path = temp_dir.join("template.tmpl");
                 let mut template_file = fs::File::create(&template_path).unwrap();
@@ -101,7 +101,7 @@ fn render_with_invalid_references_fails() {
         },
         ErrorTestCase {
             reference_error: "InvalidJsonConfig",
-            error_message: "Error",
+            error_message: "config is invalid JSON",
             setup_template: |temp_dir| {
                 let template_path = temp_dir.join("template.tmpl");
                 let mut template_file = fs::File::create(&template_path).unwrap();
