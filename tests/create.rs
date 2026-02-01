@@ -10,7 +10,7 @@ fn create_without_subcommand_shows_help() {
 }
 
 #[test]
-fn create_config_shows_help() {
+fn create_config_creates_config() {
     let mut cmd = cargo_bin_cmd!("temple");
     cmd.arg("create").arg("config");
     cmd.assert()
@@ -19,7 +19,7 @@ fn create_config_shows_help() {
 }
 
 #[test]
-fn create_template_shows_help() {
+fn create_template_creates_template() {
     let mut cmd = cargo_bin_cmd!("temple");
     cmd.arg("create").arg("template");
     cmd.assert()
