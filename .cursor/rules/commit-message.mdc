@@ -1,0 +1,11 @@
+---
+alwaysApply: true
+---
+
+# Commit Message Rules
+
+Before creating any commit message, you must review the commit message template and format defined in `.gitmessage`, along with the current diff set.
+
+Follow that template exactly as the single source of truth for commit message formatting. Do not duplicate or paraphrase the rules here—always refer to `.gitmessage` directly.
+
+And don't guess at what's being commited, verify what's changed.
