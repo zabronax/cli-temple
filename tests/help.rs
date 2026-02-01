@@ -1,6 +1,5 @@
 use assert_cmd::cargo::cargo_bin_cmd;
 
-// Small smoke tests for the CLI
 #[test]
 fn given_no_arguments_when_invoking_cli_then_help_is_displayed() {
     let mut cmd = cargo_bin_cmd!("temple");
