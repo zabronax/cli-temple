@@ -19,6 +19,7 @@ fn cli() -> Command {
             .arg(Arg::new("template_ref")
             .short('t')
             .long("template-ref")
+            .required(true)
             .help("The reference to the template to render"))
             // Reference to the config to use for rendering the template
             .arg(Arg::new("config_ref")
@@ -51,21 +52,18 @@ fn main() {
         Some(("render", sub_matches)) => {
             let target = sub_matches
                 .get_one::<String>("target")
-                // Fallback to HTML if not provided
                 .map(String::as_str)
-                .unwrap_or("html");
+                .expect("target is required");
 
             let template_ref = sub_matches
                 .get_one::<String>("template_ref")
-                // Fallback to default template if not provided
                 .map(String::as_str)
-                .unwrap_or("file://templates/default.html");
+                .expect("template_ref is required");
 
             let config_ref = sub_matches
                 .get_one::<String>("config_ref")
-                // Fallback to default config if not provided
                 .map(String::as_str)
-                .unwrap_or("file://config/default.json");
+                .expect("config_ref is required");
 
             render(target, template_ref, config_ref);
         }
